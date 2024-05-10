@@ -70,12 +70,16 @@
 // // Socket.io event handlers for real-time communication
 
 
-const express = require('express');
-const http = require('http');
-const dotenv = require('dotenv');
-const socketIo = require('socket.io');
-const cors=require('cors');
-const mongoose = require('mongoose');
+import  express from 'express';
+import http from "http"
+import dotenv from "dotenv"
+import { Server } from 'socket.io';
+import cors from "cors"
+import mongoose from  "mongoose"
+import connectDB from './Mongo.js';
+import router from './Routes/Message.js';
+import bodyParser from 'body-parser';
+dotenv.config()
 const app = express();
 
 app.use(cors({
@@ -83,27 +87,20 @@ app.use(cors({
     credentials: true // Allow cookies or authorization tokens
 
 }))
-const mongoURI = process.env.MONGo_URI; // Replace with your connection string
-
-
-mongoose.connect("mongodb+srv://sunnyjadaun63:SQthu1fut0pWIFZY@chatapplication.8jcskd1.mongodb.net/?retryWrites=true&w=majority&appName=ChatApplication", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error(err));
-
+app.use(bodyParser())
 
 const server = http.createServer(app);
-
-const io = socketIo(server, {
-    cors: {
-      origin: 'http://localhost:5173', // Adjust the origin based on your frontend URL
-      methods: ['GET', 'POST'],
-      allowedHeaders: ['my-custom-header'],
-      credentials: true
-    }
-  });
+const mongoURI = process.env.MONGO_URI;
+connectDB(mongoURI)
+app.use("/api",router)
+const io = new Server(server, {
+  cors: {
+    origin: '*', // Adjust the origin based on your frontend URL
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['my-custom-header'],
+    credentials: true
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 io.on('connection', (socket) => {
